@@ -43,11 +43,12 @@ cbi DDRB, 0 ;set PB0 input (pin 8) (to upper left on button A)
 ldi R16, 0x00
 ldi R21, 0x00
 ldi R18, dispsign
+ldi R23, 0x11
 ; Replace with your application code
 
 start:
 	rcall display
-	rjmp pollRPG
+	rjmp poll2
 	rjmp start
 
 display: ; backup used registers on stack
@@ -84,7 +85,7 @@ end:
                pop R20
                pop R18
                pop R19
-               ret 
+			   ret 
 
 pollRPG:
 	rcall readRPG
@@ -132,10 +133,8 @@ midway2:
 check_1:
 	clr R18
 	ldi R18, disp1
-	;cpi R23, 1
-
-	;cpi R23,0
-
+	cpi R23, 1
+	cpi R23,0
 	rjmp start
 	
 check_2:
@@ -237,6 +236,12 @@ check_sign:
 	cpi R23, 1
 	cpi R23, 0
 
+jumpClockwise:
+	rjmp clockwise_turn
+
+jumpCounter:
+	rjmp counterclock_turn
+
 ; read all 4 rpg "phase" into R16
 readRPG:
 	clr R16
@@ -246,6 +251,7 @@ readRPG:
 	lsl R16
 	lsl R16
 	mov R21, R16
+
 	in R16, PINC
 	andi R16, 0x03
 	or R16, R21
@@ -262,6 +268,33 @@ readRPG:
 	andi R16, 0x03
 	or R16, R21
 	ret
+
+
+poll2:
+	rcall readRPG2
+	mov R23, R22
+	andi R23, 0x3
+	cp R16, R23 
+	brne shiftAB
+	rjmp poll2
+
+	shiftAB:
+	lsl R22
+	lsl R22
+	Or R22, R16
+	rjmp compare
+
+readRPG2:
+	in R16, PINC
+	andi r16,0x03
+	ret
+
+compare:
+	cpi R22, 0b11010010
+	breq jumpClockwise
+	cpi R22, 0b11100001
+	breq jumpCounter
+	rjmp poll2
 
  
 
