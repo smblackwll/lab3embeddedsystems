@@ -6,8 +6,8 @@
 ;
 
 ; configure PC0, PC1 as input for RPG channel a and channel b
-cbi DDRC, 1			; channel a
-cbi DDRC, 0			; channel b
+cbi DDRC, 1			; channel b
+cbi DDRC, 0			; channel a
 ; configure PB0 as input for pushbutton
 
 ; output pins for 7 segment display
@@ -31,15 +31,23 @@ cbi DDRB, 0 ;set PB0 input (pin 8) (to upper left on button A)
 .equ disp7 = 0x7
 .equ disp8 = 0x7F
 .equ disp9 = 0x6F
+.equ dispa = 0b1110111
+.equ dispb = 0b1111100
+.equ dispc = 0b0111001
+.equ dispd = 0b1011110
+.equ dispe = 0b1111001
+.equ dispf = 0b1110001
+.equ dispsign = 0b1000000
 .equ dispFlash = 0x80 
 
 ldi R16, 0x00
 ldi R21, 0x00
-ldi R18, disp8
+ldi R18, dispsign
 ; Replace with your application code
 
 start:
 	rcall display
+	rjmp pollRPG
 	rjmp start
 
 display: ; backup used registers on stack
@@ -80,57 +88,40 @@ end:
 
 pollRPG:
 	rcall readRPG
+	cpi R16, 0b11010010
+	breq clockwise_turn
+	cpi R16, 0b11100001
+	breq counterclock_turn
+	rjmp start
 
-; read all 4 rpg "phase" into R16
-readRPG:
-	in R16, PINC
-	andi R16, 0x03
-	lsl R16
-	lsl R16
-	mov R21, R16
-	in R16
-	andi R16, 0x03
-	or R16, R21
-	lsl R16
-	lsl R16
-	mov R21, 16
-	in R16
-	andi R16, 0x03
-	or R16, R21
-	lsl R16
-	lsl R16
-	mov R21, 16
-	in R16
-	andi R16, 0x03
-	or R16, R21
-	lsl R16
-	lsl R16
-	ret
-
+clockwise_turn:
+	rjmp check_1
+counterclock_turn:
+	rjmp check_9
 
 count_to_digital:
-               cpi R16, 0x00
-               breq check_0
-               cpi R16, 0x01
-               breq check_1
-               cpi R16, 0x02
-               breq check_2
-               cpi R16, 0x03
-               breq check_3
-               cpi R16, 0x04
-               breq check_4
-               cpi R16, 0x05
-               breq check_5
-               cpi R16, 0x06
-               breq check_6
-               cpi R16, 0x07
-               breq check_7
-               cpi R16, 0x08
-               breq check_8
-               cpi R16, 0x09
-               breq check_9
-               cpi r16, 9
-			   brge start
+	cpi R16, 0x00
+    breq check_0
+    cpi R16, 0x01
+    breq check_1
+    cpi R16, 0x02
+    breq check_2
+    cpi R16, 0x03
+    breq check_3
+    cpi R16, 0x04
+    breq check_4
+    cpi R16, 0x05
+    breq check_5
+    cpi R16, 0x06
+    breq check_6
+    cpi R16, 0x07
+    breq check_7
+    cpi R16, 0x08
+    breq check_8
+    cpi R16, 0x09
+    breq check_9
+    cpi r16, 9
+	brge start
 
 check_0:
 	clr R18
@@ -138,86 +129,139 @@ check_0:
 	rjmp start
 midway2:
 	rjmp start
-               check_1:
+check_1:
+	clr R18
+	ldi R18, disp1
+	;cpi R23, 1
 
-                              clr R18
-                              ldi R18, disp1
-                              cpi R23, 1
-                              ;breq loop2
-                              cpi R23,0
-                              ;breq midway
+	;cpi R23,0
 
-               check_2:
+	rjmp start
+	
+check_2:
+	clr R18
+	ldi R18, disp2
+	cpi R23, 1
+	;breq loop2
+	cpi R23,0
+	;breq midway2
+check_3:
+	clr R18
+	ldi R18, disp3
+	cpi R23, 1
+	;breq loop2
+	cpi R23,0
+	;breq midway2
+	;rjmp start
+check_4:
+	clr R18
+	ldi R18, disp4
+	cpi R23, 1
+	;breq loop2
+	cpi R23,0
+	;breq midway2
+	;rjmp start
+check_5:
+	clr R18
+	ldi R18, disp5
+	cpi R23, 1
+	;breq loop2
+	cpi R23,0
+	;breq midway2
+	;rjmp start
+check_6:
+	clr R18
+	ldi R18, disp6
+	cpi R23, 1
+	;breq loop2
+	cpi R23,0
+	;breq midway2
+	;rjmp start
+check_7:
+	clr R18
+	ldi R18, disp7
+	cpi R23, 1
+	;breq loop2
+	cpi R23,0
+	;breq midway2
+	;rjmp start
+check_8:
+	clr R18
+	ldi R18, disp8
+	cpi R23, 1
+	;breq loop2
+	cpi R23,0
+	;breq midway2
+	;rjmp start
+check_9:
+	clr R18
+	ldi R18, disp9
+	cpi R23, 1
+	;breq loop2
+	cpi R23,0
+	;breq midway2
+	rjmp start
+check_a:
+	clr R18
+	ldi R18, dispa
+	cpi R23, 1
+	cpi R23, 0
+check_b:
+	clr R18
+	ldi R18, dispb
+	cpi R23, 1
+	cpi R23, 0
+check_c:
+	clr R18
+	ldi R18, dispc
+	cpi R23, 1
+	cpi R23, 0
+check_d:
+	clr R18
+	ldi R18, dispd
+	cpi R23, 1
+	cpi R23, 0
+check_e:
+	clr R18
+	ldi R18, dispe
+	cpi R23, 1
+	cpi R23, 0
+check_f:
+	clr R18
+	ldi R18, dispf
+	cpi R23, 1
+	cpi R23, 0
+check_sign:
+	clr R18
+	ldi R18, dispsign
+	cpi R23, 1
+	cpi R23, 0
 
-                              clr R18
-                              ldi R18, disp2
-                              cpi R23, 1
-                              ;breq loop2
-                              cpi R23,0
-                              ;breq midway2
-
-               check_3:
-
-                              clr R18
-                              ldi R18, disp3
-                              cpi R23, 1
-                              ;breq loop2
-                              cpi R23,0
-                              ;breq midway2
-                              ;rjmp start
-
-               check_4:
-
-                              clr R18
-                              ldi R18, disp4
-                              cpi R23, 1
-                              ;breq loop2
-                              cpi R23,0
-                              ;breq midway2
-                              ;rjmp start
-               check_5:
-                              clr R18
-                              ldi R18, disp5
-                              cpi R23, 1
-                              ;breq loop2
-                              cpi R23,0
-                              ;breq midway2
-                              ;rjmp start
-               check_6:
-                              clr R18
-                              ldi R18, disp6
-                              cpi R23, 1
-                              ;breq loop2
-                              cpi R23,0
-                              ;breq midway2
-
-                              ;rjmp start
-
-               check_7:
-                              clr R18
-                              ldi R18, disp7
-                              cpi R23, 1
-                              ;breq loop2
-                              cpi R23,0
-                              ;breq midway2
-                              ;rjmp start
-
-               check_8:
-                              clr R18
-                              ldi R18, disp8
-                              cpi R23, 1
-                              ;breq loop2
-                              cpi R23,0
-                              ;breq midway2
-                              ;rjmp start
-               check_9:
-                              clr R18
-                              ldi R18, disp9
-                              cpi R23, 1
-                              ;breq loop2
-                              cpi R23,0
-                              ;breq midway2
-                              ;rjmp start
+; read all 4 rpg "phase" into R16
+readRPG:
+	clr R16
+	clr R21
+	in R16, PINC
+	andi R16, 0x03
+	lsl R16
+	lsl R16
+	mov R21, R16
+	in R16, PINC
+	andi R16, 0x03
+	or R16, R21
+	lsl R16
+	lsl R16
+	mov R21, R16
+	in R16, PINC
+	andi R16, 0x03
+	or R16, R21
+	lsl R16
+	lsl R16
+	mov R21, R16
+	in R16, PINC
+	andi R16, 0x03
+	or R16, R21
+	ret
 
  
 
