@@ -43,7 +43,7 @@ cbi DDRB, 0 ;set PB0 input (pin 8) (to upper left on button A)
 ldi R16, 0x00
 ldi R21, 0x00
 ldi R18, dispsign
-ldi R23, 0x11
+;ldi R23, 0x11
 ; Replace with your application code
 
 start:
@@ -96,9 +96,11 @@ pollRPG:
 	rjmp start
 
 clockwise_turn:
-	rjmp check_f
+	inc R16
+	rjmp count_to_digital
 counterclock_turn:
-	rjmp check_9
+	dec R16
+	rjmp count_to_digital
 
 count_to_digital:
 	cpi R16, 0x00
@@ -121,8 +123,18 @@ count_to_digital:
     breq check_8
     cpi R16, 0x09
     breq check_9
-    cpi r16, 9
-	brge start
+	cpi R16, 0x10
+	breq check_a
+	cpi R16, 0x11
+	breq check_b
+	cpi R16, 0x12
+	breq check_c
+	cpi R16, 0x13
+	breq check_d
+	cpi R16, 0x14
+	breq check_e
+	cpi R16, 0x15
+	breq check_f
 
 check_0:
 	clr R18
@@ -133,108 +145,68 @@ midway2:
 check_1:
 	clr R18
 	ldi R18, disp1
-	cpi R23, 1
-	cpi R23,0
 	rjmp start
-	
 check_2:
 	clr R18
 	ldi R18, disp2
-	cpi R23, 1
-	;breq loop2
-	cpi R23,0
-	;breq midway2
+	rjmp start
 check_3:
 	clr R18
 	ldi R18, disp3
-	cpi R23, 1
-	;breq loop2
-	cpi R23,0
-	;breq midway2
-	;rjmp start
+	rjmp start
 check_4:
 	clr R18
 	ldi R18, disp4
-	cpi R23, 1
-	;breq loop2
-	cpi R23,0
-	;breq midway2
-	;rjmp start
+	rjmp start
 check_5:
 	clr R18
 	ldi R18, disp5
-	cpi R23, 1
-	;breq loop2
-	cpi R23,0
-	;breq midway2
-	;rjmp start
+	rjmp start
 check_6:
 	clr R18
 	ldi R18, disp6
 	cpi R23, 1
-	;breq loop2
-	cpi R23,0
-	;breq midway2
-	;rjmp start
+	rjmp start
 check_7:
 	clr R18
 	ldi R18, disp7
-	cpi R23, 1
-	;breq loop2
-	cpi R23,0
-	;breq midway2
-	;rjmp start
+	rjmp start
 check_8:
 	clr R18
 	ldi R18, disp8
-	cpi R23, 1
-	;breq loop2
-	cpi R23,0
-	;breq midway2
-	;rjmp start
+	rjmp start
 check_9:
 	clr R18
 	ldi R18, disp9
-	cpi R23, 1
-	;breq loop2
-	cpi R23,0
-	;breq midway2
 	rjmp start
 check_a:
 	clr R18
 	ldi R18, dispa
-	cpi R23, 1
-	cpi R23, 0
+	rjmp start
 check_b:
 	clr R18
 	ldi R18, dispb
-	cpi R23, 1
-	cpi R23, 0
+	rjmp start
 check_c:
 	clr R18
 	ldi R18, dispc
-	cpi R23, 1
-	cpi R23, 0
+	rjmp start
 check_d:
 	clr R18
 	ldi R18, dispd
-	cpi R23, 1
-	cpi R23, 0
+	rjmp start
 check_e:
 	clr R18
 	ldi R18, dispe
-	cpi R23, 1
-	cpi R23, 0
+	rjmp start
 check_f:
 	clr R18
 	ldi R18, dispf
-	cpi R23, 1
-	cpi R23, 0
+	rjmp start
 check_sign:
 	clr R18
 	ldi R18, dispsign
-	cpi R23, 1
-	cpi R23, 0
+	rjmp start
 
 jumpClockwise:
 	rjmp clockwise_turn
