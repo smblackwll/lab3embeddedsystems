@@ -42,6 +42,7 @@ cbi DDRB, 0 ;set PB0 input (pin 8) (to upper left on button A)
 
 ldi R16, 0x00
 ldi R21, 0x00
+ldi R25,  0x00
 ldi R18, dispsign
 ;ldi R23, 0x11
 ; Replace with your application code
@@ -96,44 +97,50 @@ pollRPG:
 	rjmp start
 
 clockwise_turn:
-	inc R16
+	inc R25
 	rjmp count_to_digital
 counterclock_turn:
-	dec R16
+	cpi R25, 0x00
+	brge count_down
+	rjmp start
+
+	count_down:
+	dec R25
+	dec R25
 	rjmp count_to_digital
 
 count_to_digital:
-	cpi R16, 0x00
+	cpi R25, 0x00
     breq check_0
-    cpi R16, 0x01
+    cpi R25, 0x01
     breq check_1
-    cpi R16, 0x02
+    cpi R25, 0x02
     breq check_2
-    cpi R16, 0x03
+    cpi R25, 0x03
     breq check_3
-    cpi R16, 0x04
+    cpi R25, 0x04
     breq check_4
-    cpi R16, 0x05
+    cpi R25, 0x05
     breq check_5
-    cpi R16, 0x06
+    cpi R25, 0x06
     breq check_6
-    cpi R16, 0x07
+    cpi R25, 0x07
     breq check_7
-    cpi R16, 0x08
+    cpi R25, 0x08
     breq check_8
-    cpi R16, 0x09
+    cpi R25, 0x09
     breq check_9
-	cpi R16, 0x10
+	cpi R25, 0x0A
 	breq check_a
-	cpi R16, 0x11
+	cpi R25, 0x0B
 	breq check_b
-	cpi R16, 0x12
+	cpi R25, 0x0C
 	breq check_c
-	cpi R16, 0x13
+	cpi R25, 0x0D
 	breq check_d
-	cpi R16, 0x14
+	cpi R25, 0x0E
 	breq check_e
-	cpi R16, 0x15
+	cpi R25, 0x0F
 	breq check_f
 
 check_0:
@@ -250,7 +257,7 @@ poll2:
 	brne shiftAB
 	rjmp poll2
 
-	shiftAB:
+shiftAB:
 	lsl R22
 	lsl R22
 	Or R22, R16
