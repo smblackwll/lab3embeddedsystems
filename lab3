@@ -68,24 +68,24 @@ loop:
 
 
 set_ser_in_1:
-               sbi PORTB,3
+	sbi PORTB,3
 end:
-               sbi PORTB,2
-               cbi PORTB,2
-; put code here to generate SRCLK pulse...
-               dec R17
-               brne loop
-               ; put code here to generate RCLK pulse
-               sbi PORTB,1
-               cbi PORTB,1
-               ; restore registers from stack
-               pop R17
-               out SREG, R17
-               pop R17
-               pop R20
-               pop R18
-               pop R19
-			   ret 
+	sbi PORTB,2
+	cbi PORTB,2
+	; put code here to generate SRCLK pulse...
+	dec R17
+	brne loop
+	; put code here to generate RCLK pulse
+	sbi PORTB,1
+	cbi PORTB,1
+	; restore registers from stack
+	pop R17
+	out SREG, R17
+	pop R17
+	pop R20
+	pop R18
+	pop R19
+	ret 
 
 pollRPG:
 	rcall readRPG
@@ -96,7 +96,7 @@ pollRPG:
 	rjmp start
 
 clockwise_turn:
-	rjmp check_1
+	rjmp check_f
 counterclock_turn:
 	rjmp check_9
 
