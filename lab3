@@ -14,8 +14,8 @@ cbi DDRC, 0			; channel a
 sbi DDRB, 3
 sbi DDRB, 2
 sbi DDRB, 1
-cbi DDRB, 0 ;set PB0 input (pin 8) (to upper left on button A)
-cbi DDRB, 5 ;set PB5 input
+cbi DDRB, 0 ; set PB0 input (push button)
+cbi DDRB, 5 ; set PB5 input
 
  
 .equ count = 0xff1                          ; assign a 16-bit value to symbol "count"
@@ -38,6 +38,7 @@ cbi DDRB, 5 ;set PB5 input
 .equ dispe = 0b1111001
 .equ dispf = 0b1110001
 .equ dispsign = 0b1000000
+.equ dispdot = 0b10000000
 .equ dispFlash = 0x80 
 
 ldi R16, 0x00
@@ -45,13 +46,12 @@ ldi R21, 0x00
 ldi R25,  0x00
 ldi R18, dispsign
 ldi R26, 0x00
-ldi R28, 0x01
+ldi R28, 0x01	// 1 indicates the correct code
 
 ;ldi R23, 0x11
 ; Replace with your application code
 
 start:
-	
 	rcall display
 	;rcall delay
 	rjmp poll2
@@ -70,8 +70,6 @@ loop:
     BRCS set_ser_in_1 ; branch if Carry is set; put code here to set SER to 0
 	cbi PORTB,3
 	rjmp end
-
-
 
 
 /*
@@ -152,8 +150,6 @@ clockwise_turn:
 	inc R25
 	rjmp count_to_digital
 
-
-	
 counterclock_turn:
 	cpi R25, 0x00
 	brne count_down
@@ -226,7 +222,6 @@ check_5:
 check_6:
 	clr R18
 	ldi R18, disp6
-	cpi R23, 1
 	rjmp start
 check_7:
 	clr R18
@@ -268,6 +263,10 @@ check_sign:
 	clr R18
 	ldi R18, dispsign
 	rjmp start
+check_dot:
+	clr R18
+	ldi R18, dispdot
+	rjmp start
 
 jumpClockwise:
 	rjmp clockwise_turn
@@ -284,7 +283,6 @@ readRPG:
 	lsl R16
 	lsl R16
 	mov R21, R16
-
 	in R16, PINC
 	andi R16, 0x03
 	or R16, R21
@@ -309,6 +307,8 @@ poll2:
 	andi R23, 0x3
 	cp R16, R23 
 	brne shiftAB
+	sbis PINB, 0
+	rcall check_loop
 	rjmp poll2
 
 shiftAB:
@@ -319,8 +319,6 @@ shiftAB:
 
 readRPG2:
 	in R16, PINC
-	SBIS PINB, 0
-	rcall record
 	andi r16,0x03
 	ret
 
@@ -332,6 +330,7 @@ compare:
 	rjmp poll2
 
 check_loop:
+	; need to increment r27 somewhere
 	cpi R27, 0x00
 	breq check0
 	cpi R27, 0x01
@@ -342,9 +341,40 @@ check_loop:
 	breq check3
 	cpi R27, 0x04
 	breq check4
+	ret
 	
 check0:
 	cpi R25, 0x05
-	breq correct
-	clr 
+	rjmp start
+	ldi R28, 0x00		; indicates the wrong sequence
+	ret
+check1:
+	cpi R25, 0x04
+	rjmp start
+	ldi R28, 0x00
+	ret
+check2:
+	cpi R25, 0x06
+	rjmp start
+	ldi R28, 0x00
+	ret
+check3: 
+	cpi R25, 0x0f
+	rjmp start
+	ldi R28, 0x00
+	ret
+check4:
+	cpi R25, 0x04
+	rjmp correct
+	ldi R28, 0x00
+	rjmp wrong
 
+correct:
+	cpi R28, 0x00
+	rjmp wrong
+	ldi R18, dispdot
+	rjmp start
+
+wrong:
+	ldi R18, dispf
+	rjmp start
