@@ -15,11 +15,11 @@ sbi DDRB, 3
 sbi DDRB, 2
 sbi DDRB, 1
 cbi DDRB, 0 ;set PB0 input (pin 8) (to upper left on button A)
+cbi DDRB, 5 ;set PB5 input
 
  
 .equ count = 0xff1                          ; assign a 16-bit value to symbol "count"
 .equ fourth_count = 0xff1
-
 
 .equ disp0 = 0x3F
 .equ disp1 = 0x6
@@ -44,11 +44,16 @@ ldi R16, 0x00
 ldi R21, 0x00
 ldi R25,  0x00
 ldi R18, dispsign
+ldi R26, 0x00
+ldi R28, 0x01
+
 ;ldi R23, 0x11
 ; Replace with your application code
 
 start:
+	
 	rcall display
+	;rcall delay
 	rjmp poll2
 	rjmp start
 
@@ -68,6 +73,40 @@ loop:
 
 
 
+
+/*
+		Timer psuedocode:
+
+		count = to time
+
+		timer:
+
+		.def tmp1 = r23    ; Use r23 for temporary variables
+		.def tmp2 = r24    ; Use r24 for temporary values 
+		...
+		; Wait for TIMER0 to roll over.
+		delay:
+		; Stop timer 0.
+		in    tmp1,TCCR0B    ; Save configuration
+		ldi tmp2,0x00      ; Stop timer 0
+		out   TCCR0B,tmp2 
+		; Clear overflow flag.     
+		in    tmp2,TIFR0      ; tmp <-- TIFR0 
+		sbr tmp2,1<<TOV0      ; Clear TOV0, write logic 1
+		out   TIFR0,tmp2
+		; Start timer with new initial count
+		out   TCNT0,count    ; Load counter
+		out   TCCR0B,tmp1    ; Restart timer
+		wait:
+		in    tmp2,TIFR0      ; tmp <-- TIFR0 
+		sbrs tmp2,TOV0      ; Check overflow flag
+		rjmp wait
+		ret
+
+*/
+
+
+ 
 set_ser_in_1:
 	sbi PORTB,3
 end:
@@ -87,6 +126,15 @@ end:
 	pop R18
 	pop R19
 	ret 
+
+; 10 ms delay
+delay:
+	in R24, TCNT0
+	cpi R24, 0x00
+	brne delay
+	;dec R26
+	;breq R26, ...	; 2 seconds
+
 
 pollRPG:
 	rcall readRPG
@@ -108,7 +156,7 @@ clockwise_turn:
 	
 counterclock_turn:
 	cpi R25, 0x00
-	brge count_down
+	brne count_down
 	rjmp start
 
 	count_down:
@@ -271,6 +319,8 @@ shiftAB:
 
 readRPG2:
 	in R16, PINC
+	SBIS PINB, 0
+	rcall record
 	andi r16,0x03
 	ret
 
@@ -280,3 +330,21 @@ compare:
 	cpi R22, 0b11100001
 	breq jumpCounter
 	rjmp poll2
+
+check_loop:
+	cpi R27, 0x00
+	breq check0
+	cpi R27, 0x01
+	breq check1
+	cpi R27, 0x02
+	breq check2
+	cpi R27, 0x03
+	breq check3
+	cpi R27, 0x04
+	breq check4
+	
+check0:
+	cpi R25, 0x05
+	breq correct
+	clr 
+
