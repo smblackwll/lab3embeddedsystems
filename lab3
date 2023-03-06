@@ -27,7 +27,7 @@ cbi DDRB, 0 ;set PB0 input (pin 8) (to upper left on button A)
 .equ disp3 = 0x4F
 .equ disp4 = 0x66
 .equ disp5 = 0x6D
-.equ disp6 = 0x7C
+.equ disp6 = 0x7D
 .equ disp7 = 0x7
 .equ disp8 = 0x7F
 .equ disp9 = 0x6F
@@ -90,22 +90,28 @@ end:
 
 pollRPG:
 	rcall readRPG
-	cpi R16, 0b11010010
+	cpi R16, 0b01001011
 	breq clockwise_turn
-	cpi R16, 0b11100001
+	cpi R16, 0b10000111
 	breq counterclock_turn
 	rjmp start
 
 clockwise_turn:
+	cpi R25, 0x0F
+	brlt count_up
+	rjmp start
+	count_up:
 	inc R25
 	rjmp count_to_digital
+
+
+	
 counterclock_turn:
 	cpi R25, 0x00
 	brge count_down
 	rjmp start
 
 	count_down:
-	dec R25
 	dec R25
 	rjmp count_to_digital
 
@@ -274,9 +280,3 @@ compare:
 	cpi R22, 0b11100001
 	breq jumpCounter
 	rjmp poll2
-
- 
-
-
-
- 
