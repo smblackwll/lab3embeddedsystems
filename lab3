@@ -6,6 +6,7 @@
 ;
 
 ; configure PC0, PC1 as input for RPG channel a and channel b
+
 cbi DDRC, 1			; channel b
 cbi DDRC, 0			; channel a
 ; configure PB0 as input for pushbutton
@@ -18,8 +19,7 @@ cbi DDRB, 0 ; set PB0 input (push button)
 cbi DDRB, 5 ; set PB5 input
 
  
-.equ count = 0xff1                          ; assign a 16-bit value to symbol "count"
-.equ fourth_count = 0xff1
+;.set count = 100                          ; assign a 16-bit value to symbol "count"
 
 .equ disp0 = 0x3F
 .equ disp1 = 0x6
@@ -39,28 +39,37 @@ cbi DDRB, 5 ; set PB5 input
 .equ dispf = 0b1110001
 .equ dispsign = 0b1000000
 .equ dispdot = 0b10000000
-.equ dispFlash = 0x80 
+.equ dispFlash = 0x80
 
+.def tmp1 = R29
+.def tmp2 = R30 
+.def counter = R31
+;.equ tmp1 = 0
+;.equ tmp2 = 0
+
+ 
 ldi R16, 0x00
 ldi R21, 0x00
 ldi R25,  0x00
 ldi R18, dispsign
 ldi R26, 0x00
 ldi R28, 0x01	// 1 indicates the correct code
-
+ldi R29, 0x01
+ldi R30, 0x02
+ldi R31, 0x01
 ;ldi R23, 0x11
 ; Replace with your application code
 
 start:
+	rcall delay
 	rcall display
+
 	;rcall delay
 	rjmp poll2
 	rjmp start
 
 display: ; backup used registers on stack
-	push R19
 	push R18
-	push R20
 	push R17
 	in R17, SREG
 	push R17
@@ -70,40 +79,6 @@ loop:
     BRCS set_ser_in_1 ; branch if Carry is set; put code here to set SER to 0
 	cbi PORTB,3
 	rjmp end
-
-
-/*
-		Timer psuedocode:
-
-		count = to time
-
-		timer:
-
-		.def tmp1 = r23    ; Use r23 for temporary variables
-		.def tmp2 = r24    ; Use r24 for temporary values 
-		...
-		; Wait for TIMER0 to roll over.
-		delay:
-		; Stop timer 0.
-		in    tmp1,TCCR0B    ; Save configuration
-		ldi tmp2,0x00      ; Stop timer 0
-		out   TCCR0B,tmp2 
-		; Clear overflow flag.     
-		in    tmp2,TIFR0      ; tmp <-- TIFR0 
-		sbr tmp2,1<<TOV0      ; Clear TOV0, write logic 1
-		out   TIFR0,tmp2
-		; Start timer with new initial count
-		out   TCNT0,count    ; Load counter
-		out   TCCR0B,tmp1    ; Restart timer
-		wait:
-		in    tmp2,TIFR0      ; tmp <-- TIFR0 
-		sbrs tmp2,TOV0      ; Check overflow flag
-		rjmp wait
-		ret
-
-*/
-
-
  
 set_ser_in_1:
 	sbi PORTB,3
@@ -120,18 +95,9 @@ end:
 	pop R17
 	out SREG, R17
 	pop R17
-	pop R20
 	pop R18
-	pop R19
 	ret 
 
-; 10 ms delay
-delay:
-	in R24, TCNT0
-	cpi R24, 0x00
-	brne delay
-	;dec R26
-	;breq R26, ...	; 2 seconds
 
 
 pollRPG:
@@ -330,7 +296,6 @@ compare:
 	rjmp poll2
 
 check_loop:
-	; need to increment r27 somewhere
 	cpi R27, 0x00
 	breq check0
 	cpi R27, 0x01
@@ -344,37 +309,63 @@ check_loop:
 	ret
 	
 check0:
+	inc R27
 	cpi R25, 0x05
-	rjmp start
+	breq poll2
 	ldi R28, 0x00		; indicates the wrong sequence
 	ret
 check1:
+	inc R27
 	cpi R25, 0x04
-	rjmp start
+	breq poll2
 	ldi R28, 0x00
 	ret
 check2:
+	inc R27
 	cpi R25, 0x06
-	rjmp start
+	breq poll2
 	ldi R28, 0x00
 	ret
 check3: 
+	inc R27
 	cpi R25, 0x0f
-	rjmp start
+	breq poll2
 	ldi R28, 0x00
 	ret
 check4:
 	cpi R25, 0x04
-	rjmp correct
+	breq correct
 	ldi R28, 0x00
 	rjmp wrong
 
 correct:
+	clr R27
 	cpi R28, 0x00
-	rjmp wrong
+	breq wrong
 	ldi R18, dispdot
 	rjmp start
 
 wrong:
+	clr R27
 	ldi R18, dispf
 	rjmp start
+
+
+; Wait for TIMER0 to roll over.
+delay:
+	; Stop timer 0.
+	in		tmp1,TCCR0B    ; Save configuration
+	ldi		tmp2,0x00      ; Stop timer 0
+	out   TCCR0B,tmp2 
+	; Clear overflow flag.     
+	in    tmp2,TIFR0      ; tmp <-- TIFR0 
+	sbr	  tmp2,1<<TOV0      ; Clear TOV0, write logic 1
+	out   TIFR0,tmp2
+	; Start timer with new initial count
+	out   TCNT0, counter    ; Load counter
+	out   TCCR0B,tmp1		; Restart timer
+wait:
+	in   tmp2,TIFR0      ; tmp <-- TIFR0 
+	sbrs tmp2,TOV0      ; Check overflow flag
+	rjmp wait
+	ret
