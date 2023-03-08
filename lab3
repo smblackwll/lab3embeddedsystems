@@ -17,7 +17,8 @@ sbi DDRB, 2
 sbi DDRB, 1
 ; set PB0 input (push button)
 cbi DDRB, 0 
-
+; set PB5 as output
+sbi DDRB,5
 
 .equ disp0 = 0x3F
 .equ disp1 = 0x6
@@ -38,28 +39,25 @@ cbi DDRB, 0
 .equ dispsign = 0b1000000
 .equ dispdot = 0b10000000
 .equ dispdash = 0b1000
-.equ dispFlash = 0x80
 
 .def tmp1 = R23
-.def tmp2 = R24 
+.def tmp2 = R24		
 .def counter = R20
 
 ldi R29, 84		  // how many time delayLoop will run through
-ldi R16, 0x00
-ldi R21, 0x00
-ldi R25, 0x00
-ldi R18, dispsign
-ldi R28, 0x01	// 1 indicates the correct code
+ldi R16, 0x00	  // RPG pulse sequence
+ldi R21, 0x00	  // copy of R16 when storing the sequence
+ldi R25, 0x00	  // stores the value should be on the led display when interacting with RPG
+ldi R18, dispsign // R18 stores the value that will be displayed
+ldi R28, 0x01	  // 1 indicates the correct code for user input
 clr R27
-sbi DDRB,5
-
 
 ; Replace with your application code
 
 start:
 	cbi PORTB,5			// turn off the LED L
 	rcall display
-	rjmp poll2
+	rjmp poll2		
 	rjmp start
 
 display: ; backup used registers on stack
@@ -93,7 +91,7 @@ end:
 	ret 
 
 
-
+// check the RPG pulse sequence
 pollRPG:
 	rcall readRPG
 	cpi R16, 0b01001011
@@ -114,11 +112,11 @@ counterclock_turn:
 	cpi R25, 0x00
 	brne count_down
 	rjmp start
-
 	count_down:
 	dec R25
 	rjmp count_to_digital
 
+// 
 count_to_digital:
 	cpi R25, 0x00
     breq check_0
@@ -238,7 +236,7 @@ jumpClockwise:
 jumpCounter:
 	rjmp counterclock_turn
 
-; read all 4 rpg "phase" into R16
+; read all 4 rpg pulses into R16
 readRPG:
 	clr R16
 	clr R21
@@ -276,6 +274,7 @@ poll2:
 	rcall wait_loop
 	rjmp poll2
 
+// wait for 2 seconds
 wait_loop:
 	rcall delayLoop
 	sbic PINB,0
@@ -320,6 +319,7 @@ check_loop:
 	ret
 
 // correct sequence: 546f4
+// check the code enetered
 check0:
 	inc R27
 	cpi R25, 0x05
@@ -350,6 +350,8 @@ check4:
 	ldi R28, 0x00
 	rjmp wrong
 
+
+// Correct sequence, display dot on LED display and 
 correct:
 	cpi R28, 0x00
 	breq wrong
@@ -364,6 +366,7 @@ correct:
 	
 	rjmp start
 
+// Wrong sequence
 wrong:
 	ldi R28, 0x01
 	clr R27
