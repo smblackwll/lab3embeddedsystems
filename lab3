@@ -44,23 +44,19 @@ cbi DDRB, 5 ; set PB5 input
 .def tmp1 = R23
 .def tmp2 = R24 
 .def counter = R20
-;.equ tmp1 = 0
-;.equ tmp2 = 0
 
- 
+ldi R29, 84			// how many time delayLoop will run through
 ldi R16, 0x00
 ldi R21, 0x00
 ldi R25,  0x00
 ldi R18, dispsign
 ldi R26, 0x00
 ldi R28, 0x01	// 1 indicates the correct code
-ldi R23, 0x01
-ldi R24, 0x02
-ldi R20, 0x01
+
 ; Replace with your application code
 
 start:
-	rcall delay
+	rcall delayLoop
 	rcall display
 
 	;rcall delay
@@ -348,6 +344,17 @@ wrong:
 	clr R27
 	ldi R18, dispf
 	rjmp start
+
+; around 10 ms delay
+delayLoop:
+	ldi R23, 0x01
+	ldi R24, 0x02
+	ldi R20, 20
+	out TCCR0B, R24
+	rcall delay
+	dec R29
+	brne delayLoop
+	ret
 
 ; Wait for TIMER0 to roll over.
 delay:
