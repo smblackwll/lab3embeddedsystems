@@ -306,25 +306,29 @@ check_loop:
 	breq check3
 	cpi R27, 0x04
 	breq check4
-        inc R27
+        
 	ret
 	
 check0:
+	inc R27
 	cpi R25, 0x05
 	breq poll2
 	ldi R28, 0x00		; indicates the wrong sequence
 	ret
 check1:
+	inc R27
 	cpi R25, 0x04
 	breq poll2
 	ldi R28, 0x00
 	ret
 check2:
+	inc R27
 	cpi R25, 0x06
 	breq poll2
 	ldi R28, 0x00
 	ret
 check3: 
+	inc R27
 	cpi R25, 0x0f
 	breq poll2
 	ldi R28, 0x00
