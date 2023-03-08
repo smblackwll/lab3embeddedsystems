@@ -52,6 +52,7 @@ ldi R21, 0x00
 ldi R25, 0x00
 ldi R18, dispsign
 ldi R28, 0x01	// 1 indicates the correct code
+clr R27
 
 ; Replace with your application code
 
@@ -317,7 +318,7 @@ check_loop:
 	breq check4
 	ret
 
-// correct sequence: 546d4
+// correct sequence: 546f4
 check0:
 	inc R27
 	cpi R25, 0x05
@@ -338,7 +339,7 @@ check2:
 	ret
 check3: 
 	inc R27
-	cpi R25, 0x0F
+	cpi R25, 0x0f
 	breq poll2
 	ldi R28, 0x00
 	ret
@@ -351,10 +352,9 @@ check4:
 correct:
 	clr R27
 	ldi R18, dispdot
-	rcall display
 	clr R30
 	ldi R30, 35
-	
+	rcall display
 	rcall fivesecond
 	cpi R28, 0x00
 	breq wrong
