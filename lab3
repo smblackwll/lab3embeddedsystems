@@ -56,7 +56,6 @@ ldi R28, 0x01	// 1 indicates the correct code
 ; Replace with your application code
 
 start:
-	;rcall delayLoop
 	rcall display
 	rjmp poll2
 	rjmp start
@@ -270,9 +269,22 @@ poll2:
 	andi R19, 0x3
 	cp R16, R19 
 	brne shiftAB
+	ldi R30, 20
 	sbis PINB, 0
-	rcall check_loop
+	rcall wait_loop
 	rjmp poll2
+
+wait_loop:
+	rcall delayLoop
+	sbic PINB,0
+	rjmp check_loop
+	dec R30
+	cpi R30, 0x00
+	brne wait_loop
+	clr R27
+	rjmp reset
+	ret
+
 
 shiftAB:
 	lsl R22
@@ -305,6 +317,7 @@ check_loop:
 	breq check4
 	ret
 
+// correct sequence: 546d4
 check0:
 	inc R27
 	cpi R25, 0x05
@@ -325,7 +338,7 @@ check2:
 	ret
 check3: 
 	inc R27
-	cpi R25, 0x0f
+	cpi R25, 0x0F
 	breq poll2
 	ldi R28, 0x00
 	ret
@@ -337,34 +350,51 @@ check4:
 
 correct:
 	clr R27
+	ldi R18, dispdot
+	rcall display
+	clr R30
+	ldi R30, 35
+	
+	rcall fivesecond
 	cpi R28, 0x00
 	breq wrong
 	rjmp start
 
 wrong:
 	clr R27
-	ldi R18, dispdash		// need to display this first before the delay
-	rcall display			// ?
+	ldi R18, dispdash	
+	rcall display			
 	clr R30
-	ldi R30, 0x25			// modify this value for the 9 second delay, around 9
+	ldi R30, 60			// modify this value for the 9 second delay, around 9
 	rcall ninesecond
 	rjmp start
+
+fivesecond:
+	rcall delayLoop
+	dec R30
+	cpi R30, 0x00
+	brne fivesecond
+	rjmp reset
+	ret
 
 ninesecond:
 	rcall delayLoop
 	dec R30
-	cpi R30, 0xff
+	cpi R30, 0x00
 	brne ninesecond
+	rjmp reset
 	ret
 
 reset:
+	clr R25
 	ldi R18, dispsign
 	rjmp start
 
+// run this once to get 50.091 ms delay
 delayLoop:
 	ldi R23, 0x01		// tmp1
-	ldi R24, 0x03		// prescaler, 64 or 256? 
-	ldi R20, 20			// counter
+	ldi R24, 0x03		// prescaler, 64 
+	ldi R20, 107			// counter
 	out TCCR0B, R24
 	rcall delay
 	dec R29
