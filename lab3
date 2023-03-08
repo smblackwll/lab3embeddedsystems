@@ -16,7 +16,7 @@ sbi DDRB, 3
 sbi DDRB, 2
 sbi DDRB, 1
 cbi DDRB, 0 ; set PB0 input (push button)
-cbi DDRB, 5 ; set PB5 input
+;cbi DDRB, 5 ; set PB5 input
 
  
 ;.set count = 100                          ; assign a 16-bit value to symbol "count"
@@ -39,27 +39,25 @@ cbi DDRB, 5 ; set PB5 input
 .equ dispf = 0b1110001
 .equ dispsign = 0b1000000
 .equ dispdot = 0b10000000
+.equ dispdash = 0b1000
 .equ dispFlash = 0x80
 
 .def tmp1 = R23
 .def tmp2 = R24 
 .def counter = R20
 
-ldi R29, 84			// how many time delayLoop will run through
+ldi R29, 84		  // how many time delayLoop will run through
 ldi R16, 0x00
 ldi R21, 0x00
-ldi R25,  0x00
+ldi R25, 0x00
 ldi R18, dispsign
-ldi R26, 0x00
 ldi R28, 0x01	// 1 indicates the correct code
 
 ; Replace with your application code
 
 start:
-	rcall delayLoop
+	;rcall delayLoop
 	rcall display
-
-	;rcall delay
 	rjmp poll2
 	rjmp start
 
@@ -228,6 +226,10 @@ check_dot:
 	clr R18
 	ldi R18, dispdot
 	rjmp start
+check_dash:
+	clr R18
+	ldi R18, dispdash
+	rjmp start
 
 jumpClockwise:
 	rjmp clockwise_turn
@@ -337,19 +339,32 @@ correct:
 	clr R27
 	cpi R28, 0x00
 	breq wrong
-	ldi R18, disp8
 	rjmp start
 
 wrong:
 	clr R27
-	ldi R18, dispf
+	ldi R18, dispdash		// need to display this first before the delay
+	rcall display			// ?
+	clr R30
+	ldi R30, 0x25			// modify this value for the 9 second delay, around 9
+	rcall ninesecond
 	rjmp start
 
-; around 10 ms delay
+ninesecond:
+	rcall delayLoop
+	dec R30
+	cpi R30, 0xff
+	brne ninesecond
+	ret
+
+reset:
+	ldi R18, dispsign
+	rjmp start
+
 delayLoop:
-	ldi R23, 0x01
-	ldi R24, 0x02
-	ldi R20, 20
+	ldi R23, 0x01		// tmp1
+	ldi R24, 0x03		// prescaler, 64 or 256? 
+	ldi R20, 20			// counter
 	out TCCR0B, R24
 	rcall delay
 	dec R29
