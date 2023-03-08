@@ -7,19 +7,17 @@
 
 ; configure PC0, PC1 as input for RPG channel a and channel b
 
-cbi DDRC, 1			; channel b
-cbi DDRC, 0			; channel a
+cbi DDRC, 1			; channel a
+cbi DDRC, 0			; channel b
 ; configure PB0 as input for pushbutton
 
 ; output pins for 7 segment display
 sbi DDRB, 3
 sbi DDRB, 2
 sbi DDRB, 1
-cbi DDRB, 0 ; set PB0 input (push button)
-;cbi DDRB, 5 ; set PB5 input
+; set PB0 input (push button)
+cbi DDRB, 0 
 
- 
-;.set count = 100                          ; assign a 16-bit value to symbol "count"
 
 .equ disp0 = 0x3F
 .equ disp1 = 0x6
@@ -53,10 +51,13 @@ ldi R25, 0x00
 ldi R18, dispsign
 ldi R28, 0x01	// 1 indicates the correct code
 clr R27
+sbi DDRB,5
+
 
 ; Replace with your application code
 
 start:
+	cbi PORTB,5			// turn off the LED L
 	rcall display
 	rjmp poll2
 	rjmp start
@@ -270,7 +271,7 @@ poll2:
 	andi R19, 0x3
 	cp R16, R19 
 	brne shiftAB
-	ldi R30, 20
+	ldi R30, 12
 	sbis PINB, 0
 	rcall wait_loop
 	rjmp poll2
@@ -352,6 +353,7 @@ check4:
 correct:
 	cpi R28, 0x00
 	breq wrong
+	sbi PORTB,5
 	clr R27
 	ldi R18, dispdot
 	clr R30
@@ -359,6 +361,7 @@ correct:
 	rcall display
 	rcall fivesecond
 	ldi R28, 0x01
+	
 	rjmp start
 
 wrong:
@@ -367,11 +370,12 @@ wrong:
 	ldi R18, dispdash	
 	rcall display			
 	clr R30
-	ldi R30, 60			// modify this value for the 9 second delay, around 9
+	ldi R30, 58			// modify this value for the 9 second delay, around 9
 	rcall ninesecond
 	
 	rjmp start
 
+// produce a 5-second delay
 fivesecond:
 	rcall delayLoop
 	dec R30
@@ -380,6 +384,7 @@ fivesecond:
 	rjmp reset
 	ret
 
+// produce a 9-second delay
 ninesecond:
 	rcall delayLoop
 	dec R30
@@ -388,6 +393,7 @@ ninesecond:
 	rjmp reset
 	ret
 
+// reset the display to "-"
 reset:
 	clr R25
 	ldi R18, dispsign
@@ -397,7 +403,7 @@ reset:
 delayLoop:
 	ldi R23, 0x01		// tmp1
 	ldi R24, 0x03		// prescaler, 64 
-	ldi R20, 107			// counter
+	ldi R20, 107		// counter
 	out TCCR0B, R24
 	rcall delay
 	dec R29
