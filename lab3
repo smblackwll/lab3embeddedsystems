@@ -350,23 +350,26 @@ check4:
 	rjmp wrong
 
 correct:
+	cpi R28, 0x00
+	breq wrong
 	clr R27
 	ldi R18, dispdot
 	clr R30
 	ldi R30, 35
 	rcall display
 	rcall fivesecond
-	cpi R28, 0x00
-	breq wrong
+	ldi R28, 0x01
 	rjmp start
 
 wrong:
+	ldi R28, 0x01
 	clr R27
 	ldi R18, dispdash	
 	rcall display			
 	clr R30
 	ldi R30, 60			// modify this value for the 9 second delay, around 9
 	rcall ninesecond
+	
 	rjmp start
 
 fivesecond:
